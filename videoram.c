@@ -155,7 +155,7 @@ void restore_video_ram(void) {
 
 // Clear the screen
 void clear_screen(void) {
-    // memset(video.screen, 0, SCREEN_SIZE);
+    memset(video.screen, 0, SCREEN_SIZE);
 }
 
 // Sets the position of the next character to be printed.
