@@ -68,6 +68,9 @@ void set_brightness(unsigned char brightness) {
     }
 }
 
+char roller_ram[ROLLER_SIZE + 512];
+char screen[SCREEN_SIZE];
+
 // Allocate memory for screen and roller RAM.
 // The stack is placed by the C runtime at the top of free memory. The screen
 // memory is placed right under the stack. The stack_size parameter sets the
@@ -77,13 +80,18 @@ void alloc_screen_memory(unsigned int stack_size) {
     void *p = NULL;
 
     // The roller RAM address must be a multiple of 512.
-    video.roller = (void *) (((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE * 2)
-                             & 0xFE00);
-    video.line_starts = (void *)(((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE)
-                             & 0xFE00);
+    //video.roller = (void *) (((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE * 2)
+                             //& 0xFE00);
+    video.roller = (void *) (((int) roller_ram + ROLLER_SIZE) & 0xFE00);
+
+    video.line_starts = video.roller + ROLLER_SIZE;
+
+    //video.line_starts = (void *)(((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE)
+                             //& 0xFE00);
 
     // Video memory directly follows the roller RAM.
-    video.screen = video.roller + ROLLER_ENTRIES * 2;
+    // video.screen = video.roller + ROLLER_ENTRIES * 2;
+    video.screen = screen;
 }
 
 // Initialize the roller RAM to point at our own screen memory
@@ -117,7 +125,12 @@ void init_roller_ram(void) {
     }
 }
 
+/*
+ * SDCC allows to treat I/O ports as variables and generates IN/OUT instructions
+ * when assigning or reading to this variable
+ */
 __sfr __at(SET_ROLLER_ADDRESS) roller_port;
+
 // Sets the roller RAM address
 void set_roller_ram_address(void) {
     unsigned int bank;
@@ -142,7 +155,7 @@ void restore_video_ram(void) {
 
 // Clear the screen
 void clear_screen(void) {
-    //FIXME: memset(video.screen, 0, SCREEN_SIZE);
+    // memset(video.screen, 0, SCREEN_SIZE);
 }
 
 // Sets the position of the next character to be printed.
