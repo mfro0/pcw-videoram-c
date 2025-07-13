@@ -41,6 +41,7 @@ $(PROG).com: $(OBJS)
 clean:
 	-rm -f $(PROG).com $(OBJS)
 	-rm -f *.lst *.asm *.sym *.map
+	-rm -f *.noi *.ihx
 
 .PHONY: depend
 depend:

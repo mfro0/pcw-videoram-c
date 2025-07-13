@@ -4,10 +4,6 @@
 
 #include "videoram.h"
 
-#pragma output noprotectmsdos
-#pragma output noredir
-#pragma output nogfxglobals
-
 // A 2048 bytes stack should be more than enough for this little demo
 #define STACK_SIZE 2048
 
@@ -19,11 +15,9 @@ int getchar(void)
     return bdos(1, 0);
 }
 
-main() {
+int main(void) {
     unsigned char i;
     unsigned char j;
-    unsigned int x;
-    unsigned char y;
 
     init_video_ram(STACK_SIZE);
 
