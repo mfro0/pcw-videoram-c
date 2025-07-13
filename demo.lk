@@ -1,0 +1,12 @@
+-mjwx
+-i demo.ihx
+-b _CODE = 0x0100
+-k /usr/share/sdcc/lib/z80
+-l z80
+cpm0.rel
+videoram.rel
+demo.rel
+characters.rel
+bdos.rel
+
+-e

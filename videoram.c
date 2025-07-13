@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include "videoram.h"
 #include "characters.h"
 
@@ -77,15 +77,17 @@ void alloc_screen_memory(unsigned int stack_size) {
     void *p = NULL;
 
     // The roller RAM address must be a multiple of 512.
-    video.roller = (&p - stack_size - SCREEN_SIZE - ROLLER_SIZE * 2) & 0xFE00;
-    video.line_starts = (&p - stack_size - SCREEN_SIZE - ROLLER_SIZE) & 0xFE00;
+    video.roller = (void *) (((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE * 2)
+                             & 0xFE00);
+    video.line_starts = (void *)(((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE)
+                             & 0xFE00);
 
     // Video memory directly follows the roller RAM.
     video.screen = video.roller + ROLLER_ENTRIES * 2;
 }
 
 // Initialize the roller RAM to point at our own screen memory
-void init_roller_ram() {
+void init_roller_ram(void) {
     unsigned char line;
     unsigned char row;
     unsigned int index;
@@ -115,8 +117,9 @@ void init_roller_ram() {
     }
 }
 
+__sfr __at(SET_ROLLER_ADDRESS) roller_port;
 // Sets the roller RAM address
-void set_roller_ram_address() {
+void set_roller_ram_address(void) {
     unsigned int bank;
     unsigned int address;
 
@@ -126,17 +129,20 @@ void set_roller_ram_address() {
     // Determines the address of the roller RAM in this bank
     address = (unsigned int)video.roller & (BANK_SIZE - 1);
 
-    outp(SET_ROLLER_ADDRESS, (bank * 32) + (address >> 9));
+    roller_port = (bank * 32) + (address >> 9);
+
+    //outp(SET_ROLLER_ADDRESS, (bank * 32) + (address >> 9));
 }
 
 // Change back the roller RAM to its standard address
-void restore_video_ram() {
-    outp(SET_ROLLER_ADDRESS, 0x5B);
+void restore_video_ram(void) {
+    //outp(SET_ROLLER_ADDRESS, 0x5B);
+    roller_port = 0x5b;
 }
 
 // Clear the screen
-void clear_screen() {
-    memset(video.screen, 0, SCREEN_SIZE);
+void clear_screen(void) {
+    //FIXME: memset(video.screen, 0, SCREEN_SIZE);
 }
 
 // Sets the position of the next character to be printed.
@@ -148,8 +154,8 @@ void locate(unsigned char col, unsigned char row) {
 }
 
 // Update the cursor position after each printed character.
-void advance_cursor() {
-    /*
+void advance_cursor(void) {
+#ifdef NOASM
     if(video.font_size & 1) {
         video.col += 2;
         video.address += 16;
@@ -173,7 +179,7 @@ void advance_cursor() {
 
     video.row = 0;
     video.address = video.screen;
-*/
+#else
 /*
     unsigned int *roller;       // 0: Roller RAM address
     unsigned int *line_starts;  // 2: Line start offsets
@@ -189,7 +195,7 @@ void advance_cursor() {
                                 //     printed
     unsigned char *brightness;  // 13: Brightness for double width character
 */
-#asm
+__asm
     ; if(video.font_size & 1) {
     ld a, (_video+12)
 	rrca
@@ -272,7 +278,8 @@ void advance_cursor() {
     ldi
 	ret
 
-#endasm
+__endasm;
+#endif /* NOASM */
 }
 
 // Main print function which uses the dedicated print function given the current
@@ -284,15 +291,16 @@ void print(const unsigned char *string) {
 // Print normal size characters. This uses memcpy in order to draw characters
 // at the maximum speed.
 void print_normal_size(const unsigned char *string) {
-    /*
-    unsigned char i;
+#ifdef NOASM
 
     for(; *string != '\0'; string++) {
         memcpy(video.address, &video.font[*string * 8], 8);
         advance_cursor();
-    }*/
+    }
 
-#asm
+#else
+    unsigned char i;
+__asm
     ; IX = stack frame
     ; string +4
     ; i -1, character_drawing -3, left -4, right -5, offset -7
@@ -338,8 +346,8 @@ void print_normal_size(const unsigned char *string) {
 .endloop_pns
     pop ix
     ret
-#endasm
-
+__endasm;
+#endif /* NOASM */
 }
 
 // Print double width characters.
@@ -389,7 +397,7 @@ void print_double_height(const unsigned char *string) {
 
 // Print double size characters.
 void print_double_size(const unsigned char *string) {
-/*
+#ifdef NOASM
     unsigned char i;
     unsigned char *character_drawing;
     unsigned char left;
@@ -420,8 +428,8 @@ void print_double_size(const unsigned char *string) {
 
         advance_cursor();
     }
-*/
-#asm
+#else
+__asm
     ; IX = stack frame
     ; string +4
     ; i -1, character_drawing -3, left -4, right -5, offset -7
@@ -537,7 +545,8 @@ void print_double_size(const unsigned char *string) {
     pop bc
     pop ix
     ret
-#endasm
+__endasm;
+#endif /* NOASM */
 }
 
 // Defines which font to use when printing characters on the screen.
@@ -547,7 +556,8 @@ void set_font(unsigned char *font) {
 
 unsigned char vertical_masks[] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) {
-/*    unsigned char mask;
+#ifdef NOASM
+    unsigned char mask;
     unsigned char y;
     unsigned int offset;
     unsigned char *address;
@@ -562,8 +572,8 @@ void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) {
         *address |= mask;
         line_start++;
     }
-*/
-#asm
+#else
+__asm
     ; x +8, y1 +6, y2 +4
     ; mask -1, y -2, offset -4, line_start -6
     ; IX = stack frame
@@ -653,11 +663,13 @@ void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) {
     pop bc
     pop ix
     ret
-#endasm
+__endasm;
+#endif /* NOASM */
 }
 
 unsigned char horz_start_masks[] = { 255, 127, 63, 31, 15, 7, 3, 1 };
 unsigned char horz_end_masks[] = { 128, 192, 224, 240, 248, 252, 254, 255 };
+
 void horizontal_line(unsigned int x1, unsigned int x2, unsigned char y) {
     unsigned char start_mask;
     unsigned char end_mask;
@@ -669,7 +681,7 @@ void horizontal_line(unsigned int x1, unsigned int x2, unsigned char y) {
     end_mask = horz_end_masks[(unsigned char)x2 & 7];
 
     address = (unsigned char *)(video.line_starts[y]) + (x1 & 0xfff8);
-    if(x1 & 0xfff8 == x2 & 0xfff8) {
+    if ((x1 & 0xfff8) == (x2 & 0xfff8)) {
         *address |= start_mask & end_mask;
         return;
     }

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include "bdos.h"
 
 #include "videoram.h"
 
@@ -13,6 +13,11 @@
 
 // Line that will receive characters
 static unsigned char line[] = "                                ";
+
+int getchar(void)
+{
+    return bdos(1, 0);
+}
 
 main() {
     unsigned char i;
