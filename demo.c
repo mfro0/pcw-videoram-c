@@ -4,9 +4,6 @@
 
 #include "videoram.h"
 
-// A 2048 bytes stack should be more than enough for this little demo
-#define STACK_SIZE 2048
-
 // Line that will receive characters
 static unsigned char line[] = "                                ";
 
@@ -19,7 +16,7 @@ int main(void) {
     unsigned char i;
     unsigned char j;
 
-    init_video_ram(STACK_SIZE);
+    init_video_ram();
 
     // Print the title frame
     set_size(SIZE_DOUBLE_WIDTH);
@@ -77,11 +74,11 @@ int main(void) {
     }
 
     for(i = 0; i < 16; i++) {
-        vertical_line(i * 32 + 24 * 8, 0, 255);
+        // vertical_line(i * 32 + 24 * 8, 0, 255);
         horizontal_line(24 * 8, 703, i * 16);
     }
 
-    vertical_line(704, 0, 255);
+    // vertical_line(704, 0, 255);
     horizontal_line(24 * 8, 703, 255);
 
     /*

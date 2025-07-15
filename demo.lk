@@ -8,5 +8,6 @@ videoram.rel
 demo.rel
 characters.rel
 bdos.rel
+bios.rel
 
 -e

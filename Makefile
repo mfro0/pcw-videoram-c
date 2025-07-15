@@ -17,7 +17,8 @@ LDFLAGS=-nmi \
 SRCS=demo.c \
      videoram.c \
      characters.c \
-     bdos.c
+     bdos.c \
+     bios.c
 
 ASMS=cpm0.s
 

@@ -20,7 +20,7 @@
 #define BRIGHTNESS_FULL 0
 #define BRIGHTNESS_HALF 1
 
-extern void init_video_ram(unsigned int stack_size);
+extern void init_video_ram(void);
 extern void set_font(unsigned char *font);
 extern void set_size(unsigned char size);
 extern void set_brightness(unsigned char brightness);

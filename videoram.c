@@ -4,6 +4,12 @@
 #include "videoram.h"
 #include "characters.h"
 
+#ifndef NOASM
+#define NAKED __naked
+#else
+#define NAKED
+#endif
+
 // Look up table: transforms 4 bits to 8 bits by duplicating each bit.
 // Ex.: 1001 -> 11000011
 static unsigned char double_bits_full[16] = {
@@ -68,30 +74,35 @@ void set_brightness(unsigned char brightness) {
     }
 }
 
-char roller_ram[ROLLER_SIZE + 512];
-char screen[SCREEN_SIZE];
+char roller_ram[ROLLER_SIZE + 3 * 512 + SCREEN_SIZE];
 
-// Allocate memory for screen and roller RAM.
-// The stack is placed by the C runtime at the top of free memory. The screen
-// memory is placed right under the stack. The stack_size parameter sets the
-// size of the stack to keep available.
-void alloc_screen_memory(unsigned int stack_size) {
+void alloc_screen_memory(void) {
     // Trick to get the stack address.
     void *p = NULL;
 
     // The roller RAM address must be a multiple of 512.
     //video.roller = (void *) (((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE * 2)
                              //& 0xFE00);
-    video.roller = (void *) (((int) roller_ram + ROLLER_SIZE) & 0xFE00);
-
-    video.line_starts = video.roller + ROLLER_SIZE;
+    video.roller = (int *) (((int) (roller_ram + ROLLER_SIZE)) & 0xFE00);
 
     //video.line_starts = (void *)(((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE)
                              //& 0xFE00);
 
+    video.line_starts = (int *) video.roller + 256;
+
     // Video memory directly follows the roller RAM.
-    // video.screen = video.roller + ROLLER_ENTRIES * 2;
-    video.screen = screen;
+    video.screen = video.line_starts + 256;
+
+    //printf("roller_ram=%p roller=%p, line_starts = %p, screen = %p\r\n",
+            //roller_ram, video.roller, video.line_starts, video.screen);
+
+    //printf("clearing roller_ram\r\npress key\r\n");
+    //memset(video.roller, 0, ROLLER_SIZE);
+    //getchar();
+
+    //printf("screen ram\r\npress key\r\n");
+    //memset(video.screen, 0, SCREEN_SIZE);
+    //getchar();
 }
 
 // Initialize the roller RAM to point at our own screen memory
@@ -104,7 +115,7 @@ void init_roller_ram(void) {
 
     // The roller RAM has one entry for each screen line
     index = 0;
-    address = (unsigned int)video.screen;
+    address = (unsigned int) video.screen;
 
     // There are 32 rows on a PCW screen
     for(row = 0; row < 32; row++) {
@@ -167,7 +178,7 @@ void locate(unsigned char col, unsigned char row) {
 }
 
 // Update the cursor position after each printed character.
-void advance_cursor(void) {
+void advance_cursor(void) NAKED {
 #ifdef NOASM
     if(video.font_size & 1) {
         video.col += 2;
@@ -214,79 +225,79 @@ __asm
 	rrca
 	jp	nc, ac_simple_width
 
-.ac_double_width
+.ac_double_width:
     ; video.col += 2;
 	ld	a,(_video+7)
-    add 2
+    add #2
     ld (_video+7), a
 
     ; video.address += 16;
     ld hl, (_video+8)
     ex de, hl
-    ld hl, 16
+    ld hl, #16
     add hl, de
     ld (_video+8), hl
 	jp	same_line
 
-.ac_simple_width
+ac_simple_width:
     ; video.col++;
-	ld	hl,_video+7
+	ld	hl,#_video+7
 	inc	(hl)
 
     ; video.address += 8;
 	ld	hl, (_video+8)
     ex de, hl
-    ld hl, 8
+    ld hl, #8
     add hl, de
     ld (_video+8), hl
 
-.same_line
+same_line:
     ; if(video.col < 90) return;
     ld a, (_video+7)
-    cp 90
+    cp #90
     ret c
 
-.next_line
+.next_line:
     ; video.col = 0;
     xor a
     ld (_video+7), a
 
     ; if(video.font_size & 2) {
 	ld a, (_video+12)
-	and	2
+	and	#2
 	jp z, simple_height
 
-.double_height
+.double_height:
     ; video.row += 2;
-    ld a, (_video+6)
-    add 2
-    ld (_video+6), a
+    ld a, (#_video+6)
+    add #2
+    ld (#_video+6), a
 
     ; video.address += 720;
-    ld hl, (_video+8)
-    ld de, 720
+    ld hl, (#_video+8)
+    ld de, #720
     add hl, de
-    ld (_video+8), hl
+    ld (#_video+8), hl
 	jp	same_page
 
-.simple_height
+simple_height:
     ; video.row++;
-	ld	hl, _video+6
+	ld	hl, #_video+6
 	inc	(hl)
 
-.same_page
+same_page:
     ; if(video.row < 32) return;
-	ld	a,(_video+6)
-    cp 32
+	ld	a,(#_video+6)
+    cp #32
     ret c
-.next_page
+.next_page:
     ; video.row = 0;
     xor a
-    ld (_video+6), a
+    ld (#_video+6), a
 
     ; video.address = video.screen;
-	ld	de, _video+8
-	ld	hl, _video+4
+	ld	de, #_video+8
+	ld	hl, #_video+4
     ldi
     ldi
 	ret
@@ -303,7 +314,7 @@ void print(const unsigned char *string) {
 
 // Print normal size characters. This uses memcpy in order to draw characters
 // at the maximum speed.
-void print_normal_size(const unsigned char *string) {
+void print_normal_size(const unsigned char *string) NAKED {
 #ifdef NOASM
 
     for(; *string != '\0'; string++) {
@@ -312,19 +323,21 @@ void print_normal_size(const unsigned char *string) {
     }
 
 #else
-    unsigned char i;
+
+    string;
+
 __asm
     ; IX = stack frame
     ; string +4
     ; i -1, character_drawing -3, left -4, right -5, offset -7
     push ix
-    ld ix, 0
+    ld ix, #0
     add ix, sp
 
-    ld c, (ix+4)
-    ld b, (ix+5)
+    ld c, 4(ix)
+    ld b, 5(ix)
 
-.forloop_pns
+.forloop_pns:
     ; for(; *string != '\0'; string++) {
     ld a, (bc)
     or a
@@ -332,7 +345,7 @@ __asm
 
     ; &video.font[*string * 8]
     ld l, a
-    ld h, 0
+    ld h, #0
     add hl, hl
     add hl, hl
     add hl, hl
@@ -354,9 +367,9 @@ __asm
     pop bc
 
     inc bc
-    jp forloop_pns
+    jp .forloop_pns
 
-.endloop_pns
+endloop_pns:
     pop ix
     ret
 __endasm;
@@ -409,7 +422,7 @@ void print_double_height(const unsigned char *string) {
 }
 
 // Print double size characters.
-void print_double_size(const unsigned char *string) {
+void print_double_size(const unsigned char *string) NAKED {
 #ifdef NOASM
     unsigned char i;
     unsigned char *character_drawing;
@@ -442,12 +455,14 @@ void print_double_size(const unsigned char *string) {
         advance_cursor();
     }
 #else
+    string;
+
 __asm
     ; IX = stack frame
     ; string +4
     ; i -1, character_drawing -3, left -4, right -5, offset -7
     push ix
-    ld ix, 0
+    ld ix, #0
     add ix, sp
 
     push bc
@@ -455,10 +470,10 @@ __asm
     push bc
     dec sp
 
-    ld l, (ix+4)
-    ld h, (ix+5)
+    ld l, 4(ix)
+    ld h, 5(ix)
 
-.forloop_pds
+forloop_pds:
     ; for(; *string != '\0'; string++) {
     ld a,(hl)
     or a
@@ -469,7 +484,7 @@ __asm
 
     ; *string * 8
     ld l, a
-    ld h, 0
+    ld h, #0
     add hl, hl
     add hl, hl
     add hl, hl
@@ -480,10 +495,10 @@ __asm
     add hl, de
     ex de, hl ; de = &video.font[*string * 8]
 
-    ld a, 0
+    ld a, #0
     ; for(i = 0; i != 16; i+= 2) {
-.forloop_pds_i
-    cp 16
+forloop_pds_i:
+    cp #16
     jp c, forloop_pds_i_inside
     push de
     call _advance_cursor
@@ -491,21 +506,21 @@ __asm
     pop hl
     jp forloop_pds
 
-.forloop_pds_i_inside
+forloop_pds_i_inside:
     push af
 
     ; offset = dh_offset[i];
-    ld hl, _dh_offset
+    ld hl, #_dh_offset
     add a
     ld c, a
-    ld b, 0
+    ld b, #0
     add hl, bc
     ld c, (hl)
     inc hl
     ld b, (hl)
     push bc
     pop iy
-    ld bc, (_video+8)
+    ld bc, (#_video+8)
     add iy, bc ; iy = &video.address[offset]
 
     ; *character_drawing >> 4
@@ -514,44 +529,44 @@ __asm
     rra
     rra
     rra
-    and 0x0f
+    and #0x0f
 
     ; left = video.brightness[*character_drawing >> 4];
-    ld hl, (_video+13)
+    ld hl, (#_video+13)
     add l
     ld l, a
-    jr nc, ASMPC+3
+    jr nc, .+3
     inc h
     ld a, (hl)
 
     ; video.address[offset] = left; // a = left, iy = offset
     ; video.address[offset+1] = left;
-    ld (iy+0), a
-    ld (iy+1), a
+    ld 0(iy), a
+    ld 1(iy), a
 
     ; *character_drawing & 0x0f
     ld a, (de)
-    and 0x0f
+    and #0x0f
 
     ; right = video.brightness[*character_drawing & 15];
     ld hl, (_video+13)
     add l
     ld l, a
-    jr nc, ASMPC+3
+    jr nc, .+3
     inc h
     ld a, (hl)
 
     ; video.address[offset+8] = right; // a = right
     ; video.address[offset+9] = right;
-    ld (iy+8), a
-    ld (iy+9), a
+    ld 8(iy), a
+    ld 9(iy), a
 
     pop af
-    add a, 2
+    add a, #2
     inc de
     jp forloop_pds_i
 
-.endloop_pds
+endloop_pds:
     inc sp
     pop bc
     pop bc
@@ -568,15 +583,16 @@ void set_font(unsigned char *font) {
 }
 
 unsigned char vertical_masks[] = { 128, 64, 32, 16, 8, 4, 2, 1 };
-void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) {
-#ifdef NOASM
+void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) NAKED {
     unsigned char mask;
     unsigned char y;
     unsigned int offset;
     unsigned char *address;
     unsigned int *line_start;
 
-    mask = vertical_masks[(unsigned char)x & 7];
+#ifdef NOASM
+
+    mask = vertical_masks[(unsigned char) x & 7];
     offset = x & 0xfff8;
 
     line_start = &video.line_starts[y1];
@@ -586,12 +602,15 @@ void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) {
         line_start++;
     }
 #else
+    x;
+    y1;
+    y2;
 __asm
     ; x +8, y1 +6, y2 +4
     ; mask -1, y -2, offset -4, line_start -6
     ; IX = stack frame
     push ix
-    ld ix, 0
+    ld ix, #0
     add ix, sp
 
     ; Reserve 6 bytes on the stack
@@ -600,28 +619,28 @@ __asm
     push bc
 
     ; mask = vertical_masks[(unsigned char)x & 7];
-    ld a, (ix+8) ; x
-    and 7
+    ld a, 8(ix) ; x
+    and #7
     ld e, a
-    ld d, 0
-    ld hl, _vertical_masks
+    ld d, #0
+    ld hl, #_vertical_masks
     add hl,de
     ld a,(hl)
 
-    ld (ix-1), a ; mask
+    ld -1(ix), a ; mask
 
     ; offset = x & 0xfff8;
-    ld a, (ix+8) ; x
-    and 0xf8
+    ld a, 8(ix) ; x
+    and #0xf8
     ld e, a
-    ld d, (ix+9)
+    ld d, 9(ix)
 
-    ld (ix-4), e ; offset
-    ld (ix-3), d
+    ld -4(ix), e ; offset
+    ld -3(ix), d
 
     ; line_start = &video.line_starts[y1];
-    ld e, (ix+6) ; y1
-    ld d, 0
+    ld e, 6(ix) ; y1
+    ld d, #0
 
     ld    hl, (_video+1+1)
     add hl, de
@@ -630,16 +649,16 @@ __asm
     ex (sp), hl
 
     ; for(y = y1; y != y2 + 1; y++) {
-    ld a, (ix+4) ; y2
-    sub a, (ix+6) ; y1
+    ld a, 4(ix) ; y2
+    sub a, 6(ix) ; y1
 
     or a
-    jp z, endfor
+    jp z,endfor
 
     pop de
     push de
 
-.forloop
+.forloop:
     ld l, e
     ld h, d
 
@@ -648,13 +667,13 @@ __asm
     inc hl
     ld b,(hl) ; bc = *line_start
 
-    ld l, (ix-4) ; hl=offset
-    ld h, (ix-3)
+    ld l, -4(ix) ; hl=offset
+    ld h, -3(ix)
 
     add hl, bc ; hl = *line_start + offset
 
     ; *address |= mask;
-    ld c, (ix-1) ; mask
+    ld c, -1(ix) ; mask
 
     ld b, a
     ld a, (hl)
@@ -667,9 +686,9 @@ __asm
     inc de
 
     dec a
-    jp nz, forloop
+    jp nz, .forloop
 
-.endfor
+endfor:
 
     pop bc
     pop bc
@@ -719,8 +738,8 @@ void frame(unsigned int tx, unsigned char ty, unsigned int bx, unsigned char by)
 }
 
 // Initializes everything!
-void init_video_ram(unsigned int stack_size) {
-    alloc_screen_memory(stack_size);
+void init_video_ram(void) {
+    alloc_screen_memory();
     locate(0, 0);
     set_size(SIZE_NORMAL);
     set_brightness(BRIGHTNESS_FULL);

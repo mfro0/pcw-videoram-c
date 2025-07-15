@@ -1,5 +1,12 @@
 #include <stdint.h>
 #include "bdos.h"
+#include "bios.h"
+
+int putchar(int ch)
+{
+    bios_conout(ch);
+    return ch;
+}
 
 unsigned char bdos(unsigned char fn, unsigned int DE) __naked
 {
