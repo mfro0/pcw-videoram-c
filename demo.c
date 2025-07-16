@@ -111,6 +111,10 @@ int main(void) {
     
     clear_screen();
     
+    random_circles();
+    
+    getchar();
+    
     // Restore standard screen settings
     restore_video_ram();
 

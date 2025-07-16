@@ -587,6 +587,45 @@ int sign(int x)
 }
 
 /*
+ * Bresenham's circle algorithm
+ */
+
+static void circle_points(int xc, int yc, int x, int y)
+{
+    set_pixel(xc + x, yc + y);
+    set_pixel(xc - x, yc + y);
+    set_pixel(xc + x, yc - y);
+    set_pixel(xc - x, yc - y);
+    set_pixel(xc + y, yc + x);
+    set_pixel(xc - y, yc - x);
+    set_pixel(xc + y, yc - x);
+    set_pixel(xc - y, yc - x);
+}
+
+void circle(int xc, int yc, int r)
+{
+    int x = 0, y = r;
+    int d = 3 - 2 * r;
+    circle_points(xc, yc, x, y);
+    while (y >= x)
+    {
+        /* check for decision parameter and correspondingly update d, y */
+        if (d > 0)
+        {
+            y--;
+            d = d + 4 * (x - y) + 10;
+        }
+        else
+            d = d + 4 * x + 6;
+        
+        /* increment x after updating decision parameter */
+        x++;
+        
+        /* draw the circle using the new coordinates */
+        circle_points(xc, yc, x, y);
+    }
+}
+/*
  * Bresenham-algorithm: draw line
  *
  * input:
