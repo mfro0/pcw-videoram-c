@@ -604,6 +604,7 @@ static void circle_points(int xc, int yc, int x, int y)
 
 void circle(int xc, int yc, int r)
 {
+#ifdef NOT_USED
     int x = 0, y = r;
     int d = 3 - 2 * r;
     circle_points(xc, yc, x, y);
@@ -624,7 +625,29 @@ void circle(int xc, int yc, int r)
         /* draw the circle using the new coordinates */
         circle_points(xc, yc, x, y);
     }
+#endif /* NOT_USED */
+    
+    /* Jesko circle (probably faster) */
+    int t1 = r / 16;
+    int x = r;
+    int y = 0;
+    int t2;
+    
+    while (x >= y)
+    {
+        circle_points(xc, yc, x, y);
+        y++;
+        t1 += y;
+        t2 = t1 - x;
+        
+        if (t2 >= 0)
+        {
+            t1 = t2;
+            x--;
+        }
+    }
 }
+    
 /*
  * Bresenham-algorithm: draw line
  *
