@@ -587,10 +587,10 @@ int sign(int x)
 }
 
 /*
- * Bresenham's circle algorithm
+ * set pixel in each of the 8 octants
  */
 
-static void circle_points(int xc, int yc, int x, int y)
+static void draw_octants(int xc, int yc, int x, int y)
 {
     set_pixel(xc + x, yc + y);
     set_pixel(xc - x, yc + y);
@@ -604,29 +604,7 @@ static void circle_points(int xc, int yc, int x, int y)
 
 void circle(int xc, int yc, int r)
 {
-#ifdef NOT_USED
-    int x = 0, y = r;
-    int d = 3 - 2 * r;
-    circle_points(xc, yc, x, y);
-    while (y >= x)
-    {
-        /* check for decision parameter and correspondingly update d, y */
-        if (d > 0)
-        {
-            y--;
-            d = d + 4 * (x - y) + 10;
-        }
-        else
-            d = d + 4 * x + 6;
-        
-        /* increment x after updating decision parameter */
-        x++;
-        
-        /* draw the circle using the new coordinates */
-        circle_points(xc, yc, x, y);
-    }
-#endif /* NOT_USED */
-    
+
     /* Jesko circle (probably faster) */
     int t1 = r / 16;
     int x = r;
@@ -635,7 +613,7 @@ void circle(int xc, int yc, int r)
     
     while (x >= y)
     {
-        circle_points(xc, yc, x, y);
+        draw_octants(xc, yc, x, y);
         y++;
         t1 += y;
         t2 = t1 - x;
