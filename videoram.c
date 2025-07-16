@@ -77,32 +77,13 @@ void set_brightness(unsigned char brightness) {
 char roller_ram[ROLLER_SIZE + 3 * 512 + SCREEN_SIZE];
 
 void alloc_screen_memory(void) {
-    // Trick to get the stack address.
-    void *p = NULL;
-
     // The roller RAM address must be a multiple of 512.
-    //video.roller = (void *) (((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE * 2)
-                             //& 0xFE00);
     video.roller = (int *) (((int) (roller_ram + ROLLER_SIZE)) & 0xFE00);
-
-    //video.line_starts = (void *)(((long) &p - stack_size - SCREEN_SIZE - ROLLER_SIZE)
-                             //& 0xFE00);
-
+    // Beware: these are int (16-bit) arrays, so it's 256 now (and not 512)
     video.line_starts = (int *) video.roller + 256;
 
     // Video memory directly follows the roller RAM.
     video.screen = video.line_starts + 256;
-
-    //printf("roller_ram=%p roller=%p, line_starts = %p, screen = %p\r\n",
-            //roller_ram, video.roller, video.line_starts, video.screen);
-
-    //printf("clearing roller_ram\r\npress key\r\n");
-    //memset(video.roller, 0, ROLLER_SIZE);
-    //getchar();
-
-    //printf("screen ram\r\npress key\r\n");
-    //memset(video.screen, 0, SCREEN_SIZE);
-    //getchar();
 }
 
 // Initialize the roller RAM to point at our own screen memory
