@@ -21,42 +21,42 @@ int main(void) {
     // Print the title frame
     set_size(SIZE_DOUBLE_WIDTH);
     locate(3, 0);
-    print("\226\232\232\232\232\232\232\232\234");
+    print((unsigned char *) "\226\232\232\232\232\232\232\232\234");
     set_size(SIZE_DOUBLE);
     locate(3, 1);
-    print("\225       \225");
+    print((unsigned char *) "\225       \225");
     set_size(SIZE_DOUBLE_WIDTH);
     locate(3, 3);
-    print("\223\232\232\232\232\232\232\232\231");
+    print((unsigned char *) "\223\232\232\232\232\232\232\232\231");
 
     // Print the title
     set_size(SIZE_DOUBLE_HEIGHT);
     locate(5, 1);
-    print("VideoRAM demo!");
+    print((unsigned char *) "VideoRAM demo!");
 
     // Print explanations in french
     set_size(SIZE_NORMAL);
     locate(0, 5);
-    print("Le jeu de caract}res de");
+    print((unsigned char *) "Le jeu de caract}res de");
     locate(0, 6);
-    print("l'Amstrad  PCW  utilise");
+    print((unsigned char *) "l'Amstrad  PCW  utilise");
     locate(0, 7);
-    print("la norme ASCII  {tendue");
+    print((unsigned char *) "la norme ASCII  {tendue");
     locate(0, 8);
-    print("@ 256  caract}res  mais");
+    print((unsigned char *) "@ 256  caract}res  mais");
     locate(0, 9);
-    print("certains sont remplac{s");
+    print((unsigned char *) "certains sont remplac{s");
     locate(0, 10);
-    print("par    des   caract}res");
+    print((unsigned char *) "par    des   caract}res");
     locate(0, 11);
-    print("accentu{s.");
+    print((unsigned char *) "accentu{s.");
 
     locate(0, 13);
-    print("Le  jeu  de  caract}res");
+    print((unsigned char *) "Le  jeu  de  caract}res");
     locate(0, 14);
-    print("est  orient{ traitement");
+    print((unsigned char *) "est  orient{ traitement");
     locate(0, 15);
-    print("de texte.");
+    print((unsigned char *) "de texte.");
 
     frame(0, 5*8, 23*8, 16*8);
 

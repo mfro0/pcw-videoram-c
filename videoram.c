@@ -38,10 +38,10 @@ static struct {
     unsigned char font_size;    // 12: Size at which the next character will be
                                 //     printed
     unsigned char *brightness;  // 13: Brightness for double width character
-} video = { NULL, NULL, 0, 0, NULL, NULL, 0, NULL };
+} video = { 0 };
 
 // Function type for a print function
-typedef void PRINT_FUNCTION(const char *string);
+typedef void PRINT_FUNCTION(const unsigned char *string);
 
 // Declare the four print functions
 void print_normal_size(const unsigned char *string);
@@ -78,12 +78,12 @@ char roller_ram[ROLLER_SIZE + 3 * 512 + SCREEN_SIZE];
 
 void alloc_screen_memory(void) {
     // The roller RAM address must be a multiple of 512.
-    video.roller = (int *) (((int) (roller_ram + ROLLER_SIZE)) & 0xFE00);
+    video.roller = (unsigned int *) (((size_t) (roller_ram + ROLLER_SIZE)) & 0xFE00);
     // Beware: these are int (16-bit) arrays, so it's 256 now (and not 512)
-    video.line_starts = (int *) video.roller + 256;
+    video.line_starts = (unsigned int *) video.roller + 256;
 
     // Video memory directly follows the roller RAM.
-    video.screen = video.line_starts + 256;
+    video.screen = (unsigned char *)(video.line_starts + 256);
 }
 
 // Initialize the roller RAM to point at our own screen memory
@@ -96,7 +96,7 @@ void init_roller_ram(void) {
 
     // The roller RAM has one entry for each screen line
     index = 0;
-    address = (unsigned int) video.screen;
+    address = (size_t) video.screen;
 
     // There are 32 rows on a PCW screen
     for(row = 0; row < 32; row++) {
@@ -129,7 +129,7 @@ void set_roller_ram_address(void) {
     unsigned int address;
 
     // Determines which RAM bank will hold the roller RAM
-    bank = BASE_BANK + ((unsigned int)video.roller >> 14);
+    bank = BASE_BANK + ((size_t) video.roller >> 14);
 
     // Determines the address of the roller RAM in this bank
     address = (unsigned int)video.roller & (BANK_SIZE - 1);
@@ -578,7 +578,7 @@ void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) NAKED {
 
     line_start = &video.line_starts[y1];
     for(y = y1; y < y2 + 1; y++) {
-        address = (unsigned char *)(*line_start) + offset;
+        address = (unsigned char *)((size_t) *line_start) + offset;
         *address |= mask;
         line_start++;
     }
@@ -693,7 +693,7 @@ void horizontal_line(unsigned int x1, unsigned int x2, unsigned char y) {
     start_mask = horz_start_masks[(unsigned char)x1 & 7];
     end_mask = horz_end_masks[(unsigned char)x2 & 7];
 
-    address = (unsigned char *)(video.line_starts[y]) + (x1 & 0xfff8);
+    address = (unsigned char *)((size_t) video.line_starts[y]) + (x1 & 0xfff8);
     if ((x1 & 0xfff8) == (x2 & 0xfff8)) {
         *address |= start_mask & end_mask;
         return;
