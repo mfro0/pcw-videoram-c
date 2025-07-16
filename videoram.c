@@ -563,6 +563,97 @@ void set_font(unsigned char *font) {
     video.font = font;
 }
 
+void set_pixel(int x, int y)
+{
+    unsigned char vertical_masks[] = { 128, 64, 32, 16, 8, 4, 2, 1 };
+    unsigned char *address;
+    unsigned char mask;
+    int offset;
+    unsigned int *line_start;
+
+    mask = vertical_masks[(unsigned char) x & 7];
+
+    offset = x & 0xfff8;
+
+    line_start = &video.line_starts[y];
+
+    address = (unsigned char *)((size_t) *line_start) + offset;
+    *address |= mask;
+}
+
+int sign(int x)
+{
+    return x > 0 ? +1 : x < 0 ? -1 : 0;
+}
+
+/*
+ * Bresenham-algorithm: draw line
+ *
+ * input:
+ *    xstart, ystart        coordinates of starting point
+ *    xend, yend            coordinates of end point
+ */
+void line(int xstart, int ystart, int xend, int yend)
+{
+    int x, y, t, dx, dy;
+    int incx, incy, pdx, pdy, ddx, ddy;
+    int deltaslowdirection, deltafastdirection, err;
+
+    /* calculate distance in both directions */
+    dx = xend - xstart;
+    dy = yend - ystart;
+
+    /* determine sign of increment */
+    incx = sign(dx);
+    incy = sign(dy);
+    if (dx < 0) dx = -dx;
+    if (dy < 0) dy = -dy;
+
+    /* determine larger distance */
+    if (dx > dy)
+    {
+        /* x is faster distance */
+        pdx = incx; pdy = 0;    /* pd. ist Parallelschritt */
+        ddx = incx; ddy = incy; /* dd. ist Diagonalschritt */
+        deltaslowdirection = dy;   deltafastdirection = dx;
+    }
+    else
+    {
+        /* y is faster distance */
+        pdx = 0;    pdy = incy; /* pd. ist Parallelschritt */
+        ddx = incx; ddy = incy; /* dd. ist Diagonalschritt */
+        deltaslowdirection = dx;   deltafastdirection = dy;
+    }
+
+    /* Initialisierungen vor Schleifenbeginn */
+    x = xstart;
+    y = ystart;
+    err = deltafastdirection / 2;
+    set_pixel(x, y);
+
+    /* Pixel berechnen */
+    for (t = 0; t < deltafastdirection; ++t) /* t zählt die Pixel, deltafastdirection ist Anzahl der Schritte */
+    {
+        /* Aktualisierung Fehlerterm */
+        err -= deltaslowdirection;
+        if (err < 0)
+        {
+            /* Fehlerterm wieder positiv (>= 0) machen */
+            err += deltafastdirection;
+            /* Schritt in langsame Richtung, Diagonalschritt */
+            x += ddx;
+            y += ddy;
+        }
+        else
+        {
+            /* Schritt in schnelle Richtung, Parallelschritt */
+            x += pdx;
+            y += pdy;
+        }
+        set_pixel(x, y);
+    }
+}
+
 void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) NAKED {
     unsigned char mask;
     unsigned int y;
