@@ -1,3 +1,4 @@
+Makefile
 bdos.c
 bdos.h
 bios.c
@@ -6,6 +7,9 @@ characters.c
 characters.h
 cpm0.s
 demo.c
+demo.lk
 dpbinfo.c
+random_lines.c
+random_lines.h
 videoram.c
 videoram.h

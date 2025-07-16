@@ -6,6 +6,7 @@
 cpm0.rel
 videoram.rel
 demo.rel
+random_lines.rel
 characters.rel
 bdos.rel
 bios.rel

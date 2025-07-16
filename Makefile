@@ -17,6 +17,7 @@ LDFLAGS=-nmi \
 SRCS=demo.c \
      videoram.c \
      characters.c \
+     random_lines.c \
      bdos.c \
      bios.c
 

@@ -3,9 +3,10 @@
 #include "bdos.h"
 
 #include "videoram.h"
+#include "random_lines.h"
 
 // Line that will receive characters
-static unsigned char line[] = "                                ";
+static unsigned char cline[] = "                                ";
 
 int getchar(void)
 {
@@ -64,13 +65,13 @@ int main(void) {
     set_size(SIZE_DOUBLE);
     for(j = 0; j < 16; j++) {
         for(i = 0; i < 16; i++) {
-            line[i * 2] = (j << 4) + i;
+            cline[i * 2] = (j << 4) + i;
         }
 
-        if(line[0] == '\0') line[0] = ' ';
+        if(cline[0] == '\0') cline[0] = ' ';
 
         locate(90-65, j * 2);
-        print(line);
+        print(cline);
     }
 
     for(i = 0; i < 16; i++) {
@@ -101,7 +102,15 @@ int main(void) {
 
     // Wait for a key before returning to CP/M
     getchar();
-
+    
+    clear_screen();
+    
+    random_lines();
+    
+    getchar();
+    
+    clear_screen();
+    
     // Restore standard screen settings
     restore_video_ram();
 
