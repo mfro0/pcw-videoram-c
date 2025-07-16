@@ -582,13 +582,13 @@ void set_font(unsigned char *font) {
     video.font = font;
 }
 
-unsigned char vertical_masks[] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) NAKED {
     unsigned char mask;
-    unsigned char y;
+    unsigned int y;
     unsigned int offset;
     unsigned char *address;
     unsigned int *line_start;
+    unsigned char vertical_masks[] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
 #ifdef NOASM
 
@@ -596,7 +596,7 @@ void vertical_line(unsigned int x, unsigned char y1, unsigned char y2) NAKED {
     offset = x & 0xfff8;
 
     line_start = &video.line_starts[y1];
-    for(y = y1; y != y2 + 1; y++) {
+    for(y = y1; y < y2 + 1; y++) {
         address = (unsigned char *)(*line_start) + offset;
         *address |= mask;
         line_start++;

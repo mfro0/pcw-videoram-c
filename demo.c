@@ -74,11 +74,11 @@ int main(void) {
     }
 
     for(i = 0; i < 16; i++) {
-        // vertical_line(i * 32 + 24 * 8, 0, 255);
+        vertical_line(i * 32 + 24 * 8, 0, 255);
         horizontal_line(24 * 8, 703, i * 16);
     }
 
-    // vertical_line(704, 0, 255);
+    vertical_line(704, 0, 255);
     horizontal_line(24 * 8, 703, 255);
 
     /*
