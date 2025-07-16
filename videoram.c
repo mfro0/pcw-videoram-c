@@ -597,7 +597,7 @@ static void circle_points(int xc, int yc, int x, int y)
     set_pixel(xc + x, yc - y);
     set_pixel(xc - x, yc - y);
     set_pixel(xc + y, yc + x);
-    set_pixel(xc - y, yc - x);
+    set_pixel(xc - y, yc + x);
     set_pixel(xc + y, yc - x);
     set_pixel(xc - y, yc - x);
 }
