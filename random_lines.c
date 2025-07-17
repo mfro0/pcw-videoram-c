@@ -41,7 +41,7 @@ void random_circles(void)
     
     for (int i = 0; i < 500; i++)
     {
-        r = rand() % 20;
+        r = rand() % 50;
         x = rand() % SCREEN_WIDTH;
         y = rand() % SCREEN_HEIGHT;
         

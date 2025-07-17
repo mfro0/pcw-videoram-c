@@ -99,7 +99,6 @@ int main(void) {
         frame(x * 2, x, 720 - x * 2, 255 - x);
     }
     */
-
     // Wait for a key before returning to CP/M
     getchar();
     
