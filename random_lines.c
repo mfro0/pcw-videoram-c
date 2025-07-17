@@ -1,5 +1,23 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "videoram.h"
+
+void spiral(void)
+{
+    int x = SCREEN_WIDTH / 2;
+    int y = SCREEN_HEIGHT / 2;
+    int x1 = 0, y1 = 0;
+
+    while (x1 < x && y1 < y)
+    {
+        line(x - x1, y - y1, x + x1, y - y1);
+        line(x + x1, y - y1, x + x1, y + y1);
+        line(x + x1, y + y1, x - x1 - 1, y + y1);
+        x1 += 1;
+        y1 += 1;
+
+    }
+}
 
 void random_lines(void)
 {
@@ -21,12 +39,12 @@ void random_circles(void)
 {
     int x, y, r;
     
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 500; i++)
     {
-        r = (rand() % SCREEN_HEIGHT) / 8;
-        x = (rand() % SCREEN_WIDTH - 2 * r) + r;
-        y = (rand() % SCREEN_HEIGHT - 2 * r) + r;
+        r = rand() % 20;
+        x = rand() % SCREEN_WIDTH;
+        y = rand() % SCREEN_HEIGHT;
         
-        circle(x, y, r);
+        ellipse(x, y, r, r / 2);
     }
 }

@@ -18,7 +18,7 @@ int main(void) {
     unsigned char j;
 
     init_video_ram();
-
+#ifdef NOT_USED
     // Print the title frame
     set_size(SIZE_DOUBLE_WIDTH);
     locate(3, 0);
@@ -108,7 +108,11 @@ int main(void) {
     random_lines();
     
     getchar();
-    
+
+    clear_screen();
+    spiral();
+    getchar();
+#endif /* NOT_USED */
     clear_screen();
     
     random_circles();

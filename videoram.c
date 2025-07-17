@@ -80,7 +80,7 @@ void alloc_screen_memory(void) {
     // The roller RAM address must be a multiple of 512.
     video.roller = (unsigned int *) (((size_t) (roller_ram + ROLLER_SIZE)) & 0xFE00);
     // Beware: these are int (16-bit) arrays, so it's 256 now (and not 512)
-    video.line_starts = (unsigned int *) video.roller + 256;
+    video.line_starts = video.roller + 256;
 
     // Video memory directly follows the roller RAM.
     video.screen = (unsigned char *)(video.line_starts + 256);
@@ -90,18 +90,18 @@ void alloc_screen_memory(void) {
 void init_roller_ram(void) {
     unsigned char line;
     unsigned char row;
-    unsigned int index;
-    unsigned int address;
-    unsigned int inbank;
+    size_t index;
+    size_t address;
+    size_t inbank;
 
     // The roller RAM has one entry for each screen line
     index = 0;
     address = (size_t) video.screen;
 
     // There are 32 rows on a PCW screen
-    for(row = 0; row < 32; row++) {
+    for (row = 0; row < 32; row++) {
         // Each row groups 8 screen lines
-        for(line = 0; line < 8; line++) {
+        for (line = 0; line < 8; line++) {
             // Determines which RAM bank will hold the line
             inbank = address & (BANK_SIZE - 1);
 
@@ -586,20 +586,109 @@ int sign(int x)
     return x > 0 ? +1 : x < 0 ? -1 : 0;
 }
 
+
+void plot_4_ellipse_points(int cx, int cy, int x, int y)
+{
+    if (cx + x >= 0 && cx + x < SCREEN_WIDTH &&
+        cy + y >= 0 && cy + y < SCREEN_HEIGHT)
+        set_pixel(cx + x, cy + y);
+
+    if (cx - x >= 0 && cx - x < SCREEN_WIDTH &&
+        cy + y >= 0 && cy + y < SCREEN_HEIGHT)
+        set_pixel(cx - x, cy + y);
+
+    if (cx - x >= 0 && cx - x < SCREEN_WIDTH &&
+        cy - y >= 0 && cy - y < SCREEN_HEIGHT)
+        set_pixel(cx - x, cy - y);
+
+    if (cx + x >= 0 && cx + x < SCREEN_WIDTH &&
+        cy - y >= 0 && cy - y < SCREEN_HEIGHT)
+        set_pixel(cx + x, cy - y);
+}
+
+
+void ellipse(int cx, int cy, int xr, int yr)
+{
+    int x, y;
+    int xc, yc;
+    int error;
+
+    int two_a_square, two_b_square;
+    int stopping_x, stopping_y;
+
+    two_a_square = 2 * xr * xr;
+    two_b_square = 2 * yr * yr;
+
+    x = xr;
+    y = 0;
+
+    xc = yr * yr * (1 - 2 * xr);
+    yc = xr * xr;
+    error = 0;
+    stopping_x = two_b_square * xr;
+    stopping_y = 0;
+
+    while (stopping_x >= stopping_y)
+    {
+        plot_4_ellipse_points(cx, cy, x, y);
+        y++;
+        stopping_y += two_a_square;
+        error += yc;
+        yc += two_a_square;
+
+        if ((2 * error + xc) > 0 )
+        {
+            x--;
+            stopping_x -= two_b_square;
+            error += xc;
+            xc += two_b_square;
+        }
+    }
+
+    x = 0;
+    y = yr;
+    xc = yr * yr;
+    yc = xr * xr * (1 - 2 * yr);
+    error = 0;
+    stopping_x = 0;
+    stopping_y = two_a_square * yr;
+
+    while (stopping_x <= stopping_y)
+    {
+        plot_4_ellipse_points(cx, cy, x, y);
+        x++;
+        stopping_x += two_b_square;
+        error += xc;
+        xc += two_b_square;
+        if ((2 * error + yc) > 0 )
+        {
+            y--;
+            stopping_y -= two_a_square;
+            error += yc;
+            yc += two_a_square;
+        }
+    }
+}
+
+
 /*
  * set pixel in each of the 8 octants
  */
 
 static void draw_octants(int xc, int yc, int x, int y)
 {
-    set_pixel(xc + x, yc + y);
-    set_pixel(xc - x, yc + y);
-    set_pixel(xc + x, yc - y);
-    set_pixel(xc - x, yc - y);
-    set_pixel(xc + y, yc + x);
-    set_pixel(xc - y, yc + x);
-    set_pixel(xc + y, yc - x);
-    set_pixel(xc - y, yc - x);
+    if (xc + x < SCREEN_WIDTH && xc - x > 0 &&
+        yc + y < SCREEN_HEIGHT && yc - y > 0)
+    {
+        set_pixel(xc + x, yc + y);
+        set_pixel(xc + x, yc - y);
+        set_pixel(xc - x, yc + y);
+        set_pixel(xc - x, yc - y);
+        set_pixel(xc + y, yc + x);
+        set_pixel(xc - y, yc + x);
+        set_pixel(xc + y, yc - x);
+        set_pixel(xc - y, yc - x);
+    }
 }
 
 void circle(int xc, int yc, int r)
@@ -607,9 +696,9 @@ void circle(int xc, int yc, int r)
 
     /* Jesko circle (probably faster) */
     int t1 = r / 16;
+    int t2 = 0;
     int x = r;
     int y = 0;
-    int t2;
     
     while (x >= y)
     {

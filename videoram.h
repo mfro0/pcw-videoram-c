@@ -31,6 +31,7 @@ extern void print(const unsigned char *string);
 extern void vertical_line(unsigned int x, unsigned char y1, unsigned char y2);
 extern void horizontal_line(unsigned int x1, unsigned int x2, unsigned char y);
 extern void circle(int xc, int yc, int r);
+extern void ellipse(int cx, int cy, int xr, int yr);
 extern void line(int xstart, int ystart, int xend, int yend);
 extern void frame(unsigned int tx, unsigned char ty, unsigned int bx, unsigned char by);
 
