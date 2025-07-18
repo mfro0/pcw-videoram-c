@@ -62,7 +62,22 @@ void random_circles(void)
         x = rand() % SCREEN_WIDTH;
         y = rand() % SCREEN_HEIGHT;
 
-        dbg_print("ellipse(%d, %d, %d, %d);\r\n", x, y, r, r / 2);
-        ellipse(x, y, r, r / 2);
+        //dbg_print("ellipse(%d, %d, %d, %d);\r\n", x, y, r, r / 2);
+        circle(x, y, r);
+    }
+}
+
+void random_ellipses(void)
+{
+    int x, y, rx, ry;
+
+    for (int i = 0; i < 500; i++)
+    {
+        rx = rand() % 200;
+        ry = rand() % 200;
+        x = rand() % SCREEN_WIDTH;
+        y = rand() % SCREEN_HEIGHT;
+
+        ellipse(x, y, rx, ry);
     }
 }

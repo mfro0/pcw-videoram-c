@@ -5,6 +5,8 @@ LD=sdldz80
 CFLAGS=\
        --std-sdcc99 \
        -mz80 \
+       --fomit-frame-pointer \
+       --opt-code-size \
        --no-std-crt0 \
        --code-loc 0x100 \
        -DNOASM \

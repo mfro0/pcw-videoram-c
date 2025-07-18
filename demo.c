@@ -17,19 +17,8 @@ int main(void) {
     unsigned char i;
     unsigned char j;
 
-    printf("PCW graphics demo\r\n");
-    printf("<press any key to begin>\r\n");
-
-    dbg_print("PCW Graphics Demo start\n");
-    dbg_print("sizeof(short) = %d\r\n", sizeof(short));
-    dbg_print("sizeof(int) = %d\r\n", sizeof(int));
-    dbg_print("sizeof(long) = %d\r\n", sizeof(long));
-    dbg_print("sizeof(long long) = %d\r\n", sizeof(long long));
-    getchar();
-
     init_video_ram();
 
-#ifdef NOT_USED
     // Print the title frame
     set_size(SIZE_DOUBLE_WIDTH);
     locate(3, 0);
@@ -114,19 +103,19 @@ int main(void) {
     getchar();
     
     clear_screen();
-    
     random_lines();
-    
     getchar();
 
     clear_screen();
     spiral();
     getchar();
-#endif /* NOT_USED */
+
     clear_screen();
-    
     random_circles();
-    
+    getchar();
+
+    clear_screen();
+    random_ellipses();
     getchar();
     
     // Restore standard screen settings
