@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "videoram.h"
+#include "bdos.h"
 
 void spiral(void)
 {
@@ -35,16 +37,32 @@ void random_lines(void)
     }
 }
 
+#include <stdarg.h>
+
+void dbg_print(char *msg, ...)
+{
+    char out[200];
+    va_list args;
+
+    va_start(args, msg);
+    vsprintf(out, msg, args);
+    va_end(args);
+
+    for (int i = 0; i < strlen(out); i++)
+        bdos(4, (unsigned int) out[i]);
+}
+
 void random_circles(void)
 {
     int x, y, r;
     
     for (int i = 0; i < 500; i++)
     {
-        r = rand() % 50;
+        r = rand() % 200;
         x = rand() % SCREEN_WIDTH;
         y = rand() % SCREEN_HEIGHT;
-        
+
+        dbg_print("ellipse(%d, %d, %d, %d);\r\n", x, y, r, r / 2);
         ellipse(x, y, r, r / 2);
     }
 }

@@ -587,7 +587,8 @@ int sign(int x)
 }
 
 
-void plot_4_ellipse_points(int cx, int cy, int x, int y)
+void plot_4_ellipse_points(long cx, long cy, long x, long
+                                                         y)
 {
     if (cx + x >= 0 && cx + x < SCREEN_WIDTH &&
         cy + y >= 0 && cy + y < SCREEN_HEIGHT)
@@ -607,14 +608,17 @@ void plot_4_ellipse_points(int cx, int cy, int x, int y)
 }
 
 
-void ellipse(int cx, int cy, int xr, int yr)
+void ellipse(long cx, long cy, long xr, long yr)
 {
-    int x, y;
-    int xc, yc;
-    int error;
+    long x, y;
+    long xc, yc;
+    long error;
 
-    int two_a_square, two_b_square;
-    int stopping_x, stopping_y;
+    long two_a_square, two_b_square;
+    long stopping_x, stopping_y;
+
+    if (xr == 0 || yr == 0)
+        return;
 
     two_a_square = 2 * xr * xr;
     two_b_square = 2 * yr * yr;
@@ -677,18 +681,30 @@ void ellipse(int cx, int cy, int xr, int yr)
 
 static void draw_octants(int xc, int yc, int x, int y)
 {
-    if (xc + x < SCREEN_WIDTH && xc - x > 0 &&
-        yc + y < SCREEN_HEIGHT && yc - y > 0)
-    {
+    if (xc + x < SCREEN_WIDTH && xc + x >= 0 &&
+        yc + y < SCREEN_HEIGHT && yc + y >= 0)
         set_pixel(xc + x, yc + y);
+    if (xc + x < SCREEN_WIDTH && xc + x >= 0 &&
+        yc - y < SCREEN_HEIGHT && yc - y >= 0)
         set_pixel(xc + x, yc - y);
+    if (xc - x < SCREEN_WIDTH && xc - x >= 0 &&
+        yc + y < SCREEN_HEIGHT && yc + y >= 0)
         set_pixel(xc - x, yc + y);
+    if (xc - x < SCREEN_WIDTH && xc - x >= 0 &&
+        yc - y < SCREEN_HEIGHT && yc - y >= 0)
         set_pixel(xc - x, yc - y);
+    if (xc + y < SCREEN_WIDTH && xc + y >= 0 &&
+        yc + x < SCREEN_HEIGHT && yc + x >= 0)
         set_pixel(xc + y, yc + x);
+    if (xc - y < SCREEN_WIDTH && xc - y >= 0 &&
+        yc + x < SCREEN_HEIGHT && yc + x >= 0)
         set_pixel(xc - y, yc + x);
+    if (xc + y < SCREEN_WIDTH && xc + y >= 0 &&
+        yc - x < SCREEN_HEIGHT && yc - x >= 0)
         set_pixel(xc + y, yc - x);
+    if (xc - y < SCREEN_WIDTH && xc - y >= 0 &&
+        yc - x < SCREEN_HEIGHT && yc - x >= 0)
         set_pixel(xc - y, yc - x);
-    }
 }
 
 void circle(int xc, int yc, int r)
