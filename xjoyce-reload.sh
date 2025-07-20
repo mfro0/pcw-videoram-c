@@ -7,5 +7,5 @@ xdotool windowfocus --sync $WID
 xdotool key --window $WID --clearmodifiers --delay 250 "F9" "F5" "y" "Return" "2"
 sleep 4
 xdotool type --window $WID --clearmodifiers --delay 300 "n:demo"
-xdotool key --window $WID --clearmodifiers --delay 250 "Return"
+xdotool key --window	 $WID --clearmodifiers --delay 250 "Return"
 
