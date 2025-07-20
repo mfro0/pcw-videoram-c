@@ -3,7 +3,7 @@
 #include "bdos.h"
 
 #include "videoram.h"
-#include "random_lines.h"
+#include "random_geo.h"
 
 // Line that will receive characters
 static unsigned char cline[] = "                                ";
@@ -82,24 +82,23 @@ int main(void) {
     vertical_line(704, 0, 255);
     horizontal_line(24 * 8, 703, 255);
 
-    /*
+#ifdef NOT_USED
     // Draw vertical lines
-    for(x = 10; x < 710; x++) {
+    for(int x = 10; x < 710; x++) {
         vertical_line(x, 10, 245);
     }
 
     // Draw horizontal lines
-    for(y = 20; y < 100; y++) {
+    for(int y = 20; y < 100; y++) {
         horizontal_line(500-y, 500+y, y);
     }
-    */
 
-    /*
-    for(x = 10; x < 120; x+= 10) {
+#endif /* NOT_USED */
+
+    for(int x = 1; x <= 120; x++) {
         frame(x * 2, x, 720 - x * 2, 255 - x);
     }
-    */
-    // Wait for a key before returning to CP/M
+
     getchar();
     
     clear_screen();
@@ -116,6 +115,7 @@ int main(void) {
 
     clear_screen();
     random_ellipses();
+    // Wait for a key before returning to CP/M
     getchar();
     
     // Restore standard screen settings

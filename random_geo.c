@@ -26,7 +26,7 @@ void random_lines(void)
     int x1, x2;
     int y1, y2;
     
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 200; i++)
     {
         x1 = rand() % SCREEN_WIDTH;
         y1 = rand() % SCREEN_HEIGHT;
@@ -39,7 +39,13 @@ void random_lines(void)
 
 #include <stdarg.h>
 
-void dbg_print(char *msg, ...)
+/*
+ * dbg_printf() works like printf(), but prints to the CP/M punch device.
+ * This allows debug prints in a graphics application without disturbing graphics.
+ *
+ * FIXME: Should probably go elsewhere.
+ */
+void dbg_printf(char *msg, ...)
 {
     char out[200];
     va_list args;
@@ -56,7 +62,7 @@ void random_circles(void)
 {
     int x, y, r;
     
-    for (int i = 0; i < 500; i++)
+    for (int i = 0; i < 200; i++)
     {
         r = rand() % 200;
         x = rand() % SCREEN_WIDTH;
@@ -71,7 +77,7 @@ void random_ellipses(void)
 {
     int x, y, rx, ry;
 
-    for (int i = 0; i < 500; i++)
+    for (int i = 0; i < 200; i++)
     {
         rx = rand() % 200;
         ry = rand() % 200;

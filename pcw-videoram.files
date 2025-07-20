@@ -9,7 +9,7 @@ cpm0.s
 demo.c
 demo.lk
 dpbinfo.c
-random_lines.c
-random_lines.h
+random_geo.c
+random_geo.h
 videoram.c
 videoram.h
